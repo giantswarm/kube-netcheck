@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-netcheck
+  namespace: kube-system
+  labels:
+    app: kube-netcheck
+spec:
+  ports:
+    - port: 6666
+  selector:
+    app: kube-netcheck
