@@ -4,25 +4,25 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"time"
 )
 
-const checkInterval = 10 * time.Second
+const (
+	checkInterval = 10 * time.Second
+	warmUpTime    = 30 * time.Second
+)
 
 // Common variables.
 var (
-	description string = "Simple network checker for Kubernetes."
-	gitCommit   string = "n/a"
-	name        string = "kube-netcheck"
-	source      string = "https://github.com/giantswarm/kube-netcheck"
+	description = "Simple network checker for Kubernetes."
+	gitCommit   = "n/a"
+	name        = "kube-netcheck"
+	source      = "https://github.com/giantswarm/kube-netcheck"
 )
-
-type Check interface {
-	Run() error
-}
 
 func main() {
 	// Print version.
@@ -36,11 +36,11 @@ func main() {
 		return
 	}
 
-	var serviceURL string
+	var connectSocket string
 	var listenSocket string
 	var help bool
 
-	flag.StringVar(&serviceURL, "service-url", "http://kube-netcheck:6666", "URL to connect to")
+	flag.StringVar(&connectSocket, "connect-socket", "kube-netcheck:6666", "tcp socket to connect to")
 	flag.StringVar(&listenSocket, "listen-socket", ":6666", "Run http server on socket")
 	flag.BoolVar(&help, "help", false, "Print usage and exit")
 	flag.Parse()
@@ -62,14 +62,24 @@ func main() {
 		log.Fatal(http.ListenAndServe(listenSocket, nil))
 	}()
 
+	// Wait while Kubernetes will start all pods.
+	time.Sleep(warmUpTime)
+
+	// Start checks.
 	for {
-		resp, err := http.Get(serviceURL)
+		s := time.Now()
+
+		d := net.Dialer{
+			Timeout: 5 * time.Second,
+		}
+
+		c, err := d.Dial("tcp", connectSocket)
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp.Body.Close()
+		c.Close()
 
-		log.Printf("OK - Checked %s with response %s", serviceURL, resp.Status)
+		log.Printf("Successfully connected to %s in %v", connectSocket, time.Since(s))
 
 		time.Sleep(checkInterval)
 	}
