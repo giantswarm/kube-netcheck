@@ -1,11 +1,14 @@
 kind: DaemonSet
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: kube-netcheck
   namespace: kube-system
   labels:
     app: kube-netcheck
 spec:
+  selector:
+    matchLabels:
+      app: kube-netcheck
   template:
     metadata:
       labels:

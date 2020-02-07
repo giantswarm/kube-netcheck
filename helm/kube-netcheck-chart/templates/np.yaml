@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: kube-netcheck
+    giantswarm.io/service-type: managed
+  name: kube-netcheck
+  namespace: kube-system
+spec:
+  egress:
+  - {}
+  ingress:
+  - {}
+  podSelector:
+    matchLabels:
+      app: kube-netcheck
+  policyTypes:
+  - Ingress
+  - Egress

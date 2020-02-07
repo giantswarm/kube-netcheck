@@ -13,13 +13,16 @@ spec:
 
 ---
 kind: DaemonSet
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: kube-netcheck
   namespace: kube-system
   labels:
     app: kube-netcheck
 spec:
+  selector:
+    matchLabels:
+      app: kube-netcheck
   template:
     metadata:
       labels:
@@ -44,3 +47,23 @@ spec:
             httpGet:
               path: /
               port: 6666
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: kube-netcheck
+    giantswarm.io/service-type: managed
+  name: kube-netcheck
+  namespace: kube-system
+spec:
+  egress:
+  - {}
+  ingress:
+  - {}
+  podSelector:
+    matchLabels:
+      app: kube-netcheck
+  policyTypes:
+  - Ingress
+  - Egress
